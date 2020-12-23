@@ -1,0 +1,87 @@
+import numpy as np
+import matplotlib.pyplot as plt
+l=0.245
+dx=0.005
+nx=int(l/dx)+1
+t=86400*5
+dt=2
+nt=int(t/dt)+1
+dT=1
+hs=170000
+k1=1.13
+k2=0.818
+r1=1000
+r2=1622
+c1=2000
+c2s=2060
+c2l=2230
+c3=(hs/(2*dT))
+h=8.3
+Tm=302
+a1=k1/(r1*c1)##concrete
+a2s=k2/(r2*c2s)
+a2l=k2/(r2*c2l)
+a3=k2/(r2*c3)
+Fo=(a1*dt)/(dx**2)
+To=303
+Bi=(h*dx)/k1
+lamda1=(a1*dt)/(dx**2)
+lamda2s=(a2s*dt)/(dx**2)
+lamda2l=(a2l*dt)/(dx**2)
+lamda3=(a3*dt)/(dx**2)
+
+Tin=273
+
+Troom=300
+N=[]
+i=[30,29,30,30,34,34,32,30,30,29,29,29,31,32,30,29,29,28,28,30,28,28,26,20,28,28,28,29,32,33,31,29,29,28,28,31,33,34,31,29,30]
+#i=[27.7854, 28.2954, 28.8154, 29.5254, 31.1954, 32.1954, 33.1354, 33.7154, 33.7254, 33.5954, 33.3554, 32.8754, 32.9254, 31.4654, 30.6354, 29.8954, 29.1654, 28.5954, 28.1354, 27.7654, 27.4754, 27.2054, 26.9754, 27.1054, 27.3254,27.7854]
+T=np.ones(nx)*Tin
+x=np.linspace(1,120,40)
+g=np.linspace(1,l,nx)
+for n in range(1,nt):
+    Tn=T.copy()
+    if n%5400==0:
+        k=int(n/5400)
+        To=i[k]+273
+    
+        
+    T[1:20]=Tn[1:20]+lamda1*(Tn[2:21]-2*Tn[1:20]+Tn[0:19])
+    if Tn[20]<(Tm-dT):
+        T[20]=(dt/(dx**2))*(a2s*Tn[21]-(a1+a2s-((dx**2)/dt))*Tn[20]+a1*Tn[19])
+    elif Tn[20]>(Tm+dT):        
+        T[20]=(dt/(dx**2))*(a2l*Tn[21]-(a1+a2l-((dx**2)/dt))*Tn[20]+a1*Tn[19])
+    elif Tn[20]>(Tm-dT) and Tn[20]<(Tm+dt):        
+        T[20]=(dt/(dx**2))*(a3*Tn[21]-(a1+a3-((dx**2)/dt))*Tn[20]+a1*Tn[19])    
+    if any(Tn[21:25])<(Tm-dt):
+        T[21:25]=Tn[21:25]+lamda2s*(Tn[22:26]-2*Tn[21:25]+Tn[20:24])
+    elif any(Tn[21:25])>(Tm+dT):
+        T[21:25]=Tn[21:25]+lamda2l*(Tn[22:26]-2*Tn[21:25]+Tn[20:24])
+    elif any(Tn[21:25])>(Tm-dT) and any(Tn[21:25])<(Tm+dt):
+        T[21:25]=Tn[21:25]+lamda3*(Tn[22:26]-2*Tn[21:25]+Tn[20:24])
+    if Tn[25]<(Tm-dT):
+        T[25]=(dt/(dx**2))*(a1*Tn[26]-(a1+a2s-((dx**2)/dt))*Tn[25]+a2s*Tn[24])
+    elif Tn[25]>(Tm+dT):
+        T[25]=(dt/(dx**2))*(a1*Tn[26]-(a1+a2l-((dx**2)/dt))*Tn[25]+a2l*Tn[24])
+    elif Tn[25]>(Tm-dT) and Tn[25]<(Tm+dt):
+        T[25]=(dt/(dx**2))*(a1*Tn[26]-(a1+a3-((dx**2)/dt))*Tn[25]+a3*Tn[24])    
+    
+    T[26:-1]=Tn[26:-1]+lamda1*(Tn[27:]-2*Tn[26:-1]+Tn[25:-2])
+    T[0]=Tn[0]*(1-2*Fo*(1+Bi))+2*Fo*Bi*To+2*Fo*Tn[1]
+    T[-1]=(1/(h+(k1/dx)))*(8.3*Troom+(k1/dx)*T[-2])       
+    #T[-1]=Tn[-1]*(1-2*Fo*(1+Bi))+2*Fo*Tn[-2]+2*Bi*Troom*Fo
+    #T[-1]=T[-2]
+    if n%5400==0:
+        N.append(T[49])
+TT=[]
+TT.append(T[:])
+
+print(TT)
+print(T)  
+plt.plot(g,T[::-1]) 
+plt.show()
+print(N)        
+plt.plot(x,N)
+plt.show() 
+ 
+ 
